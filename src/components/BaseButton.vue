@@ -29,7 +29,6 @@ export default {
 <style lang="scss">
 .base-button {
     button{
-        width: 100%;
         border-radius: 0.7rem;
         padding: 0.9rem 0.7rem;
         border: none;

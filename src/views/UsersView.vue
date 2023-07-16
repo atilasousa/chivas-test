@@ -10,23 +10,38 @@
         <th>Name</th>
         <th>E-mail</th>
         <th>Data de nascimento</th>
+        <th>Actions</th>
       </tr>
       <tr v-for="user in users" :key="user.id">
         <td>{{user.name}}</td>
         <td>{{user.email}}</td>
         <td>{{user.birthDate}}</td>
+        <td>
+          <font-awesome-icon @click="handleEditUser(user)" class="edit" icon="pen-to-square" />
+          <font-awesome-icon class="delete" @click="handleDeleteUser(user.id)" icon="trash" />
+        </td>
       </tr>
     </table>
+    <edit-user-modal @close="closeModal" v-if="showModal" :user="userToEdit" />
   </div>
 </template>
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import EditUserModal from '@/components/EditUserModal.vue'
 import BaseButton from '@/components/BaseButton.vue'
+import Swal from 'sweetalert2'
 
 export default {
   name: 'UsersView',
   components: {
-    BaseButton
+    BaseButton,
+    EditUserModal
+  },
+  data () {
+    return {
+      userToEdit: null,
+      showModal: false
+    }
   },
   computed: {
     ...mapGetters({
@@ -39,10 +54,31 @@ export default {
   methods: {
     ...mapActions({
       getUsers: 'authStore/GET_USERS',
-      logOut: 'authStore/LOG_OUT'
+      logOut: 'authStore/LOG_OUT',
+      deleteUser: 'authStore/DELETE_USER'
     }),
     handleLogOut () {
       this.logOut()
+    },
+    handleEditUser (user) {
+      this.userToEdit = user
+      this.showModal = true
+    },
+    async handleDeleteUser (id) {
+      Swal.fire({
+        title: 'Deseja eliminar este usuário?',
+        showCancelButton: true,
+        confirmButtonText: 'Sim',
+        cancelButtonText: 'Não'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          await this.deleteUser({ id: id })
+          Swal.fire('Usuário eliminado!', '', 'success')
+        }
+      })
+    },
+    closeModal () {
+      this.showModal = false
     }
   }
 }
@@ -77,6 +113,19 @@ export default {
     text-align: left;
     background-color: #04aa6d;
     color: white;
+  }
+
+  svg{
+    cursor: pointer;
+    margin-right: 0.5rem;
+  }
+
+  .edit{
+    color: #ffb703;
+  }
+
+  .delete{
+    color: red;
   }
 }
 </style>

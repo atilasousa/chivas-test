@@ -1,6 +1,8 @@
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth, db } from '@/config/firebase'
-import { setDoc, doc, collection, serverTimestamp, getDocs } from 'firebase/firestore'
+import { setDoc, doc, collection, serverTimestamp, getDocs, deleteDoc, updateDoc } from 'firebase/firestore'
+import { FirebaseError } from 'firebase/app'
+import Swal from 'sweetalert2'
 import router from '@/router/index.js'
 
 const collectionRef = collection(db, 'users')
@@ -33,30 +35,66 @@ export const authStore = {
           return { user: response.user }
         }
       } catch (error) {
-        return { error }
+        if (error instanceof FirebaseError) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: error.message
+          })
+        }
       }
     },
     async CREATE_USER ({ commit }, { email, password, name, birthDate }) {
-      const response = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      )
-      if (response.user) {
-        const documentRef = doc(collectionRef)
-
-        await setDoc(documentRef, {
-          name,
+      try {
+        const response = await createUserWithEmailAndPassword(
+          auth,
           email,
-          birthDate,
-          created_at: serverTimestamp()
-        })
+          password
+        )
+        if (response.user) {
+          const documentRef = doc(collectionRef)
 
-        commit('setUser', response.user)
+          await setDoc(documentRef, {
+            name,
+            email,
+            birthDate,
+            created_at: serverTimestamp()
+          })
 
-        await router.push('/users')
-        return response.user
+          commit('setUser', response.user)
+
+          await router.push('/users')
+          return response.user
+        }
+      } catch (error) {
+        if (error instanceof FirebaseError) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: error.message
+          })
+        }
       }
+    },
+    async UPDATE_USER ({ commit, dispatch }, { id, name, birthDate }) {
+      const documentRef = doc(db, 'users', id)
+
+      await updateDoc(documentRef, {
+        name,
+        birthDate,
+        updated_at: serverTimestamp()
+      })
+
+      await dispatch('GET_USERS')
+    },
+    async DELETE_USER ({ commit, dispatch }, { id }) {
+      const docRef = doc(db, 'users', id)
+      if (auth.currentUser.uid === id) {
+        await dispatch('LOG_OUT')
+      }
+
+      await deleteDoc(docRef)
+      await dispatch('GET_USERS')
     },
     async GET_USERS ({ commit }) {
       const users = []
