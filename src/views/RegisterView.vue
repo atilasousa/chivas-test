@@ -9,7 +9,7 @@
                 <base-input v-model="data.birthDate" label="Digite a sua data de nascimento" type="date" />
                 <base-input v-model="data.email" label="Digite o seu e-mail" place-holder="exemplo@gmail.com" />
                 <base-input v-model="data.password" label="Digite a sua passowrd" place-holder="password" type="password" />
-                <base-button type="submit">Registar</base-button>
+                <base-button :is-loading="isLoading" type="submit">Registar</base-button>
                 {{ data.birthDate }}
             </form>
             <div>
@@ -35,15 +35,21 @@ export default {
         birthDate: '',
         email: '',
         password: ''
-      }
+      },
+      isLoading: false
     }
   },
   methods: {
     ...mapActions({
       register: 'authStore/CREATE_USER'
     }),
-    onSubmit () {
-      this.register(this.data)
+    async onSubmit () {
+      this.isLoading = true
+      const response = await this.register(this.data)
+
+      if (response.error) {
+        this.isLoading = false
+      }
     }
   }
 }

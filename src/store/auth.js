@@ -64,6 +64,14 @@ export const authStore = {
           commit('setUser', response.user)
 
           await router.push('/users')
+          Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Usuário foi cadastrado com sucesso',
+            showConfirmButton: false,
+            timer: 1500
+          })
+
           return response.user
         }
       } catch (error) {
@@ -73,6 +81,7 @@ export const authStore = {
             title: 'Oops...',
             text: error.message
           })
+          return { error }
         }
       }
     },

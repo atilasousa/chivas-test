@@ -46,9 +46,6 @@ export default {
 
       const Isinvalid = await this.$v.$invalid
 
-      console.log(Isinvalid)
-      console.log(this.$v)
-
       if (Isinvalid) {
         this.isLoading = false
         return
